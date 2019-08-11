@@ -3,7 +3,9 @@ import ReactMapboxGl, { Layer, Feature, Popup, ZoomControl } from 'react-mapbox-
 import EditLocationForm from '../components/map/EditLocationForm'
 import PopupFormat from '../components/map/PopupFormat'
 import AddLocationForm from '../components/map/AddLocationForm'
+import SideBar from '../components/bar/Sidebar'
 import config from '../config/index'
+import  '../css/sidebarcontainer.css'
 import axios from 'axios'
 import moment from 'moment'
 import styled from 'styled-components'
@@ -17,6 +19,26 @@ const PopupStyle = styled.div`
 
 // this token was taken from internet :)
 const Map = ReactMapboxGl({ accessToken: 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA' })
+
+const getDistanceFromLatLonInKm = (lat1, lon1, lat2, lon2) => {
+  const earthRadius = 6371;
+  const dLat = deg2rad(lat2-lat1);
+  const dLon = deg2rad(lon2-lon1);
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) *
+    Math.sin(dLon/2) * Math.sin(dLon/2)
+    ;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const totalKilometersDistance = earthRadius * c;
+
+  return totalKilometersDistance;
+};
+
+const deg2rad = (deg) => {
+  return deg * (Math.PI/180)
+};
+
 class LiveMap extends React.Component {
   constructor(props) {
     super(props);
@@ -27,7 +49,8 @@ class LiveMap extends React.Component {
       location: undefined,
       addLocation: {},
       isEditing: false,
-      isAddingLocation: false
+      isAddingLocation: false,
+      isShowingOpened: false
     };
   }
 
@@ -38,6 +61,24 @@ class LiveMap extends React.Component {
     axios.get(`${config.lmbApi}/api/locations`)
       .then((response) => {
         this.setState({ locations: response.data })
+        const options = {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        };
+
+        const error = (err) => {
+          console.warn(`ERROR(${err.code}): ${err.message}`);
+        };
+
+        navigator.geolocation.getCurrentPosition((position) => {
+          const sortedLocations = response.data.sort((a, b) => {
+            const distanceA = getDistanceFromLatLonInKm(parseFloat(a.latitude), parseFloat(a.longitude), position.coords.latitude, position.coords.longitude);
+            const distanceB = getDistanceFromLatLonInKm(parseFloat(b.latitude), parseFloat(b.longitude), position.coords.latitude, position.coords.longitude);
+            return distanceA - distanceB;
+          });
+          this.setState({ locations: sortedLocations })
+        }, error, options);
       })
       .catch(error => {
         throw error
@@ -98,6 +139,10 @@ class LiveMap extends React.Component {
 
   toggleAddingLocation() {
     this.setState({ isAddingLocation: !this.state.isAddingLocation })
+  }
+
+  toggleShowingOpened() {
+    this.setState({ isShowingOpened: !this.state.isShowingOpened })
   }
 
   /**
@@ -199,9 +244,29 @@ class LiveMap extends React.Component {
   }
 
   render() {
-    const { center, zoom, location, isEditing, isAddingLocation } = this.state;
+    const { center, zoom, location, isEditing, isAddingLocation, isShowingOpened } = this.state;
+    let locations = this.state.locations;
+
+    if (isShowingOpened) {
+      locations = this.state.locations.filter((location) => {
+        const now = moment();
+        if (now.isAfter(moment(location.open_time, 'HH:mm'), 'minute') && now.isBefore(moment(location.close_time, 'HH:mm'), 'minute')) {
+          return true;
+        }
+        return false;
+      });
+    }
+
     return (
       <div>
+        <div className="side-bar-container">
+          <button
+              className='button'
+              onClick={this.toggleShowingOpened.bind(this)} >
+              {isShowingOpened ? 'All locations' :'Open locations'}
+          </button>
+          <SideBar locations={locations}/>
+        </div>
         {isAddingLocation &&
           <AddLocationForm
             onSubmitForm={this.onSubmitNewLocation.bind(this)}
@@ -211,7 +276,7 @@ class LiveMap extends React.Component {
         <Map
           containerStyle={{
             height: '98vh',
-            width: '100%'
+            width: '80%'
           }}
           style='mapbox://styles/mapbox/navigation-guidance-day-v2'
           center={center}

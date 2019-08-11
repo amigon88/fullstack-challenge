@@ -1,0 +1,16 @@
+.side-bar-container {
+  float: left;
+  display: block;
+  width: 18%;
+  background-color: #dad8d8;
+  height: 100vh;
+  padding: 1%;
+}
+
+.side-bar-container button {
+  width: 100%;
+  margin-bottom: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}

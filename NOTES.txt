@@ -1,0 +1,24 @@
+Time spent: 2:15 minutes
+
+Short Description of the problem resolution
+
+1.- The first thing was to fetch the data using the code that was already here
+2.- After fetching the data I’m checking the geolocation of the user and sorting based on the proximity (I took the code to get the distance from Stackoverflow)
+3.- When the sort is completed I’m adding this data to the sidebar
+4.- I added a button that will show only open places or all the places depending on the state, this is done taking advantage of the moment library and checking agains the current time
+
+
+Future tasks/ improvements
+
+* I would like to improve the time that takes to sort the locations because now is taking some time, probably I would do some caching here for the geolocation
+* I would add the feature to go to the place when the name is clicked
+* The add location button is not working correctly since it's adding everything twice, so I would like to fix that
+* It would be nice to add a button in the map to get the current location of the user
+* When you open the modal to edit it there is no a cancel button, would be a good enhancement
+* Validations for forms are needed, that would help to check the backend side together with testing
+
+Test comments
+* Since this is a full stack test I would also include to add a couple of endpoints and handle the errors in order to check the backend side
+* I suggest to add some unit tests at least for the backend and utils, that would give a better metric if people know how to write them
+* It would be also good to have a guide style (like the airbnb guide), that would help to have consistency across the code baseline and we could measure if people adapt to the rules easily
+

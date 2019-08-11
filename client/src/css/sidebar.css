@@ -1,0 +1,14 @@
+.side-bar a {
+  display: block;
+  padding: 10px 0;
+  font-size: 1.1em;
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.side-bar a:hover {
+  background-color: #555;
+  color: white;
+}
